@@ -4,6 +4,11 @@ from typing import Dict, Any, List, Set
 from .ir_models import TypeRef
 
 class TypeRegistry:
+    """
+    A global registry that holds type definitions and manages dependency resolution.
+    This acts as the single source of truth for all complex types (enums, objects) 
+    defined in the schemas.
+    """
     def __init__(self):
         self.types: Dict[str, Any] = {}
         self.enum_defs: Dict[str, Any] = {}
@@ -11,6 +16,14 @@ class TypeRegistry:
         self._resolution_stack: Set[str] = set()
 
     def register_type(self, name: str, typedef: Any):
+        """
+        Registers a new type in the registry. 
+        Will classify it as an enum or object for faster lookups later.
+        
+        Args:
+            name: The unique identifier for the type.
+            typedef: The schema definition dictionary for the type.
+        """
         if name in self.types:
             raise ValueError(f"Type '{name}' already registered.")
         
