@@ -1,0 +1,16 @@
+{
+  "models": [
+    {
+      "title": "Gemma 2",
+      "provider": "ollama",
+      "model": "gemma2",
+      "apiBase": "https://unprolonged-randee-nongratuitous.ngrok-free.dev"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Gemma 2",
+    "provider": "ollama",
+    "model": "gemma2",
+    "apiBase": "https://unprolonged-randee-nongratuitous.ngrok-free.dev"
+  }
+}
