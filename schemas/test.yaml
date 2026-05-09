@@ -1,0 +1,5 @@
+events:
+  - name: TestEvent
+    payload:
+      player: string
+      score: number
