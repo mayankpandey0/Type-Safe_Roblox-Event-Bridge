@@ -1,5 +1,6 @@
 class LuauEmitter:
-    def emit(self, ir_list) -> dict:
+    def emit(self, ir) -> dict:
+        ir_list = ir.events if hasattr(ir, "events") else ir
         return {
             "Types.luau": self._emit_types(ir_list),
             "ClientBridge.luau": self._emit_client(ir_list),
@@ -56,12 +57,40 @@ class LuauEmitter:
             out.append("        return false")
             out.append("    end")
             for field in event.fields:
-                if field.type == "number":
-                    out.append(f"    if type(payload.{field.name}) ~= 'number' or payload.{field.name} ~= payload.{field.name} or payload.{field.name} == math.huge or payload.{field.name} == -math.huge then")
+                val_name = f"payload.{field.name}"
+                is_opt = field.type_ref.is_optional
+                is_arr = field.type_ref.is_array
+                base_type = field.type_ref.name
+                if base_type in ("int", "float"):
+                    base_type = "number"
+
+                indent = "    "
+                if is_opt:
+                    out.append(f"    if {val_name} ~= nil then")
+                    indent = "        "
+
+                if is_arr:
+                    out.append(f"{indent}if type({val_name}) ~= 'table' then")
+                    out.append(f"{indent}    return false")
+                    out.append(f"{indent}end")
+                    out.append(f"{indent}for _, val in ipairs({val_name}) do")
+                    if base_type == "number":
+                        out.append(f"{indent}    if type(val) ~= 'number' or val ~= val or val == math.huge or val == -math.huge then")
+                    else:
+                        out.append(f"{indent}    if type(val) ~= '{base_type}' then")
+                    out.append(f"{indent}        return false")
+                    out.append(f"{indent}    end")
+                    out.append(f"{indent}end")
                 else:
-                    out.append(f"    if type(payload.{field.name}) ~= '{field.type}' then")
-                out.append("        return false")
-                out.append("    end")
+                    if base_type == "number":
+                        out.append(f"{indent}if type({val_name}) ~= 'number' or {val_name} ~= {val_name} or {val_name} == math.huge or {val_name} == -math.huge then")
+                    else:
+                        out.append(f"{indent}if type({val_name}) ~= '{base_type}' then")
+                    out.append(f"{indent}    return false")
+                    out.append(f"{indent}end")
+
+                if is_opt:
+                    out.append("    end")
             out.append("    return true")
             out.append("end")
         out.append("return Validators")

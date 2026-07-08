@@ -10,9 +10,22 @@ class NormalizePass:
     def execute(self, ast: Dict[str, Any]) -> List[EventIR]:
         # Expand references, identify cycles, flatten objects
         events_ir = []
-        for event_name, event_data in ast.get("events", {}).items():
+        events_raw = ast.get("events", {})
+        if isinstance(events_raw, list):
+            event_items = []
+            for item in events_raw:
+                if isinstance(item, dict) and "name" in item:
+                    item_name = item["name"]
+                    event_items.append((item_name, item))
+        elif isinstance(events_raw, dict):
+            event_items = list(events_raw.items())
+        else:
+            event_items = []
+
+        for event_name, event_data in event_items:
             fields = []
-            for fname, fdata in event_data.get("fields", {}).items():
+            fields_data = event_data.get("fields", event_data.get("payload", {}))
+            for fname, fdata in (fields_data or {}).items():
                 is_array = False
                 is_optional = False
                 

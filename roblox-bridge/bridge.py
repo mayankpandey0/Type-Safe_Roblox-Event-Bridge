@@ -3,8 +3,10 @@ import sys
 import yaml
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.append(str(Path(__file__).parent))
+# Resolve absolute path to the project root
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.append(str(project_root / "roblox-bridge"))
 
 from core.compiler import Compiler
 from emitters.luau_emitter import LuauEmitter
@@ -31,4 +33,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.command == "generate":
-        run_pipeline(Path(args.schema), Path("out"))
+        schema_path = Path(args.schema)
+        if not schema_path.is_absolute():
+            schema_path = project_root / schema_path
+            
+        out_dir = Path("out")
+        if not out_dir.is_absolute():
+            out_dir = project_root / out_dir
+            
+        run_pipeline(schema_path, out_dir)
