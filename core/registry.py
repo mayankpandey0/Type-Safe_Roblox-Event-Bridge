@@ -53,25 +53,26 @@ class TypeRegistry:
             raise ValueError(f"Type '{name}' not found in registry.")
 
         self._resolution_stack.add(name)
-        typedef = self.types[name]
-        
-        # Deep resolve if it's an object with fields
-        if isinstance(typedef, dict) and typedef.get("type") == "object":
-            resolved_fields = {}
-            for fname, ftype in typedef.get("fields", {}).items():
-                if isinstance(ftype, str):
-                    self.resolve_type(ftype) # Ensure it resolves
-                    resolved_fields[fname] = ftype
-                elif isinstance(ftype, dict) and "ref" in ftype:
-                    ref_name = ftype["ref"]
-                    self.resolve_type(ref_name)
-                    resolved_fields[fname] = ftype
-                else:
-                    resolved_fields[fname] = ftype
-            typedef["fields"] = resolved_fields
+        try:
+            typedef = self.types[name]
             
-        self._resolution_stack.remove(name)
-        return typedef
+            # Deep resolve if it's an object with fields
+            if isinstance(typedef, dict) and typedef.get("type") == "object":
+                resolved_fields = {}
+                for fname, ftype in typedef.get("fields", {}).items():
+                    if isinstance(ftype, str):
+                        self.resolve_type(ftype) # Ensure it resolves
+                        resolved_fields[fname] = ftype
+                    elif isinstance(ftype, dict) and "ref" in ftype:
+                        ref_name = ftype["ref"]
+                        self.resolve_type(ref_name)
+                        resolved_fields[fname] = ftype
+                    else:
+                        resolved_fields[fname] = ftype
+                typedef["fields"] = resolved_fields
+            return typedef
+        finally:
+            self._resolution_stack.discard(name)
 
     def clear(self):
         self.types.clear()
